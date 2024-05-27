@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:padding="16dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/attitude"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Attitude"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_attituderoll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/attitude"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Attitude Roll: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_attituderoll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_attituderoll"
+            app:layout_constraintTop_toTopOf="@+id/tv_attituderoll"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_attitudepitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_attituderoll"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Attitude Pitch: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_attitudepitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_attitudepitch"
+            app:layout_constraintTop_toTopOf="@+id/tv_attitudepitch"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_attitudeazimuth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_attitudepitch"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Attitude Azimuth: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_attitudeazimuth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_attitudeazimuth"
+            app:layout_constraintTop_toTopOf="@+id/tv_attitudeazimuth"
+            android:text="0"
+            android:textSize="17sp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint2"
+        android:layout_width="wrap_content"
+        android:paddingBottom="16dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraint1">
+
+        <TextView
+            android:id="@+id/gravity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Gravity"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_gravityx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/gravity"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Gravity X: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_gravityx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_gravityx"
+            app:layout_constraintTop_toTopOf="@+id/tv_gravityx"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_gravityy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_gravityx"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Gravity Y: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_gravityy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_gravityy"
+            app:layout_constraintTop_toTopOf="@+id/tv_gravityy"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_gravityz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_gravityy"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Gravity Z: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_gravityz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_gravityz"
+            app:layout_constraintTop_toTopOf="@+id/tv_gravityz"
+            android:text="0"
+            android:textSize="17sp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint3"
+        android:layout_width="wrap_content"
+        android:paddingBottom="16dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraint2">
+
+        <TextView
+            android:id="@+id/rotationrate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rotation Rate"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_rotationratex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/rotationrate"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Rotation Rate X: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_rotaionratex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_rotationratex"
+            app:layout_constraintTop_toTopOf="@+id/tv_rotationratex"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_rotationratey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_rotationratex"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Rotation Rate Y: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_rotationratey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_rotationratey"
+            app:layout_constraintTop_toTopOf="@+id/tv_rotationratey"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_rotationratez"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_rotationratey"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="Rotation Rate Z: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_rotationratez"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_rotationratez"
+            app:layout_constraintTop_toTopOf="@+id/tv_rotationratez"
+            android:text="0"
+            android:textSize="17sp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraint4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraint3">
+
+        <TextView
+            android:id="@+id/useracceleration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User Acceleration"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_useraccx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/useracceleration"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="User Acceleration X: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_useraccx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_useraccx"
+            app:layout_constraintTop_toTopOf="@+id/tv_useraccx"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_useraccy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_useraccx"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="User Acceleration Y: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_useraccy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_useraccy"
+            app:layout_constraintTop_toTopOf="@+id/tv_useraccy"
+            android:text="0"
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/tv_useraccz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tv_useraccy"
+            app:layout_constraintStart_toStartOf="parent"
+            android:text="User Acceleration Z: "
+            android:textSize="17sp"/>
+
+        <TextView
+            android:id="@+id/value_useraccz"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@+id/tv_useraccz"
+            app:layout_constraintTop_toTopOf="@+id/tv_useraccz"
+            android:text="0"
+            android:textSize="17sp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
