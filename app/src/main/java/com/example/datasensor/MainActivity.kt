@@ -6,6 +6,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -20,7 +22,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var sensorManager: SensorManager
     private lateinit var sensordatabase: SensorRoomDatabase
-    private var previousSensorData: SensorData? = null
+    private val attitudeReading = FloatArray(3)
+    private val gravityReading = FloatArray(3)
+    private val gyroscopeReading = FloatArray(3)
+    private val accelerometerReading = FloatArray(3)
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val saveInterval = 20L
+
+    private val checkHandler = Handler(Looper.getMainLooper())
+    private val checkInterval = 1000L // 1 detik
+
+    // Counter untuk jumlah data yang disimpan
+    private var dataCounter = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,8 +48,44 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         sensordatabase = SensorRoomDatabase.getDatabase(this)
 
         registerSensors()
+        startSavingDataPeriodically()
+        startCheckingData()
 
 
+    }
+
+    private fun startSavingDataPeriodically() {
+        val saveDataRunnable = object : Runnable {
+            override fun run() {
+                saveSensorData()
+                handler.postDelayed(this, saveInterval)
+            }
+        }
+        handler.post(saveDataRunnable)
+    }
+
+    private fun saveSensorData() {
+        val sensorData = SensorData().apply {
+            attituderoll = attitudeReading[0].toString()
+            attitudepitch = attitudeReading[1].toString()
+            attitudeazimuth = attitudeReading[2].toString()
+            gravityx = gravityReading[0].toString()
+            gravityy = gravityReading[1].toString()
+            gravityz = gravityReading[2].toString()
+            rotationratex = gyroscopeReading[0].toString()
+            rotationratey = gyroscopeReading[1].toString()
+            rotationratez = gyroscopeReading[2].toString()
+            useraccelerationx = accelerometerReading[0].toString()
+            useraccelarationy = accelerometerReading[1].toString()
+            useraccelerationz = accelerometerReading[2].toString()
+        }
+
+        Log.d("SensorData", "Prepared SensorData object: $sensorData")
+        lifecycleScope.launch(Dispatchers.IO) {
+            sensordatabase.sensorDao().insert(sensorData)
+            dataCounter++
+        }
+        updateUI(sensorData)
     }
 
     private fun registerSensors() {
@@ -53,6 +103,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
+    private fun startCheckingData() {
+        val checkDataRunnable = object : Runnable {
+            override fun run() {
+                Log.d("DataCounter", "Number of rows inserted in the last second: $dataCounter")
+                dataCounter = 0 // Reset counter
+                checkHandler.postDelayed(this, checkInterval)
+            }
+        }
+        checkHandler.post(checkDataRunnable)
+    }
+
     override fun onResume() {
         super.onResume()
         registerSensors()
@@ -64,54 +125,20 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
-        event?.let { e ->
-            Log.d("SensorValue", "Received sensor values: ${e.values.contentToString()}")
-            var sensorData = SensorData()
 
-            previousSensorData?.let {
-                sensorData = it.copy()
+            if(event == null){
+                return
             }
 
-            when (e.sensor.type) {
-                Sensor.TYPE_ROTATION_VECTOR -> {
-                    sensorData.attituderoll =
-                        e.values.getOrNull(0)?.toString() ?: sensorData.attituderoll
-                    sensorData.attitudepitch =
-                        e.values.getOrNull(1)?.toString() ?: sensorData.attitudepitch
-                    sensorData.attitudeazimuth =
-                        e.values.getOrNull(2)?.toString() ?: sensorData.attitudeazimuth
-                }
-
-                Sensor.TYPE_GRAVITY -> {
-                    sensorData.gravityx = e.values.getOrNull(0)?.toString() ?: sensorData.gravityx
-                    sensorData.gravityy = e.values.getOrNull(1)?.toString() ?: sensorData.gravityy
-                    sensorData.gravityz = e.values.getOrNull(2)?.toString() ?: sensorData.gravityz
-                }
-
-                Sensor.TYPE_GYROSCOPE -> {
-                    sensorData.rotationratex =
-                        e.values.getOrNull(0)?.toString() ?: sensorData.rotationratex
-                    sensorData.rotationratey =
-                        e.values.getOrNull(1)?.toString() ?: sensorData.rotationratey
-                    sensorData.rotationratez =
-                        e.values.getOrNull(2)?.toString() ?: sensorData.rotationratez
-                }
-
-                Sensor.TYPE_ACCELEROMETER -> {
-                    sensorData.useraccelerationx =
-                        e.values.getOrNull(0)?.toString() ?: sensorData.useraccelerationx
-                    sensorData.useraccelarationy =
-                        e.values.getOrNull(1)?.toString() ?: sensorData.useraccelarationy
-                    sensorData.useraccelerationz =
-                        e.values.getOrNull(2)?.toString() ?: sensorData.useraccelerationz
-                }
+            if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR){
+                System.arraycopy(event.values, 0, attitudeReading, 0, attitudeReading.size)
+            }else if (event.sensor.type == Sensor.TYPE_GRAVITY){
+                System.arraycopy(event.values, 0, gravityReading, 0, gravityReading.size)
+            }else if (event.sensor.type == Sensor.TYPE_GYROSCOPE){
+                System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
+            }else if (event.sensor.type == Sensor.TYPE_ACCELEROMETER){
+                System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
             }
-            Log.d("SensorData", "Prepared SensorData object: $sensorData")
-            lifecycleScope.launch(Dispatchers.IO) {
-                sensordatabase.sensorDao().insert(sensorData)
-            }
-            updateUI(sensorData)
-        }
 
     }
 
