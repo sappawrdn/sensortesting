@@ -16,6 +16,8 @@ import com.example.datasensor.database.SensorRoomDatabase
 import com.example.datasensor.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
 
@@ -50,8 +52,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         registerSensors()
         startSavingDataPeriodically()
         startCheckingData()
-
-
+        checkSensorAvailability(Sensor.TYPE_ROTATION_VECTOR)
+        checkSensorAvailability(Sensor.TYPE_GRAVITY)
+        checkSensorAvailability(Sensor.TYPE_GYROSCOPE)
+        checkSensorAvailability(Sensor.TYPE_LINEAR_ACCELERATION)
     }
 
     private fun startSavingDataPeriodically() {
@@ -66,18 +70,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun saveSensorData() {
         val sensorData = SensorData().apply {
-            attituderoll = attitudeReading[0].toString()
-            attitudepitch = attitudeReading[1].toString()
-            attitudeazimuth = attitudeReading[2].toString()
-            gravityx = gravityReading[0].toString()
-            gravityy = gravityReading[1].toString()
-            gravityz = gravityReading[2].toString()
-            rotationratex = gyroscopeReading[0].toString()
-            rotationratey = gyroscopeReading[1].toString()
-            rotationratez = gyroscopeReading[2].toString()
-            useraccelerationx = accelerometerReading[0].toString()
-            useraccelarationy = accelerometerReading[1].toString()
-            useraccelerationz = accelerometerReading[2].toString()
+            attitudepitch = convertToPlainString(attitudeReading[0])
+            attituderoll = convertToPlainString(attitudeReading[1])
+            attitudeazimuth = convertToPlainString(attitudeReading[2])
+            gravityx = convertToPlainString(gravityReading[0])
+            gravityy = convertToPlainString(gravityReading[1])
+            gravityz = convertToPlainString(gravityReading[2])
+            rotationratex = convertToPlainString(gyroscopeReading[0])
+            rotationratey = convertToPlainString(gyroscopeReading[1])
+            rotationratez = convertToPlainString(gyroscopeReading[2])
+            useraccelerationx = convertToPlainString(accelerometerReading[0])
+            useraccelarationy = convertToPlainString(accelerometerReading[1])
+            useraccelerationz = convertToPlainString(accelerometerReading[2])
         }
 
         Log.d("SensorData", "Prepared SensorData object: $sensorData")
@@ -88,12 +92,16 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         updateUI(sensorData)
     }
 
+    private fun convertToPlainString(value: Float): String {
+        return BigDecimal(value.toString()).toPlainString()
+    }
+
     private fun registerSensors() {
         val sensors = listOf(
-            Sensor.TYPE_ROTATION_VECTOR,
+            Sensor.TYPE_GAME_ROTATION_VECTOR,
             Sensor.TYPE_GRAVITY,
             Sensor.TYPE_GYROSCOPE,
-            Sensor.TYPE_ACCELEROMETER
+            Sensor.TYPE_LINEAR_ACCELERATION
         )
 
         sensors.forEach { sensorType ->
@@ -102,6 +110,45 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
         }
     }
+
+    private fun checkSensorAvailability(sensorType: Int) {
+        val sensor = sensorManager.getDefaultSensor(sensorType)
+        if (sensor != null) {
+            Log.d("SensorAvailability", "Sensor with type $sensorType is available on this device.")
+        } else {
+            Log.d("SensorAvailability", "Sensor with type $sensorType is not available on this device.")
+        }
+    }
+
+    fun getEulerAngles(rotationVector: FloatArray?): FloatArray? {
+        if (rotationVector == null || rotationVector.size < 4) {
+            return null // Handle invalid input
+        }
+
+        val rotationMatrix = FloatArray(9)
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector)
+
+        val w = rotationMatrix[0]
+        val x = rotationMatrix[3]
+        val y = rotationMatrix[6]
+        val z = rotationMatrix[1]
+
+        val sinB = 2.0f * (w * z + x * y)
+        val cosB = 1.0f - 2.0f * (x * x + y * y)
+
+        val pitch: Float
+        val roll: Float
+        val yaw: Float
+
+
+            // Standard calculation for most orientations
+            pitch = Math.atan2(y.toDouble(), cosB.toDouble()).toFloat()
+            roll = Math.atan2(sinB.toDouble(), x.toDouble()).toFloat()
+            yaw = Math.atan2(z.toDouble(), w.toDouble()).toFloat()
+
+        return floatArrayOf(pitch, roll, yaw)
+    }
+
 
     private fun startCheckingData() {
         val checkDataRunnable = object : Runnable {
@@ -113,6 +160,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
         checkHandler.post(checkDataRunnable)
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -130,32 +178,41 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 return
             }
 
-            if (event.sensor.type == Sensor.TYPE_ROTATION_VECTOR){
-                System.arraycopy(event.values, 0, attitudeReading, 0, attitudeReading.size)
+            if (event.sensor.type == Sensor.TYPE_GAME_ROTATION_VECTOR){
+                /*System.arraycopy(event.values, 0, attitudeReading, 0, attitudeReading.size)*/
+                val eulerAngles = getEulerAngles(event.values)
+                if (eulerAngles != null) {
+                    attitudeReading[0] = eulerAngles[0] // Check for null on specific index
+                    attitudeReading[1] = eulerAngles[1]
+                    attitudeReading[2] = eulerAngles[2]
+                }
+
             }else if (event.sensor.type == Sensor.TYPE_GRAVITY){
                 System.arraycopy(event.values, 0, gravityReading, 0, gravityReading.size)
             }else if (event.sensor.type == Sensor.TYPE_GYROSCOPE){
                 System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
-            }else if (event.sensor.type == Sensor.TYPE_ACCELEROMETER){
-                System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
+            }else if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION){
+                accelerometerReading[0] = event.values[0] / -9.81f
+                accelerometerReading[1] = event.values[1] / -9.81f
+                accelerometerReading[2] = event.values[2] / -9.81f
             }
 
     }
 
     private fun updateUI(sensorData: SensorData) {
         runOnUiThread {
-            binding.valueAttituderoll.text = sensorData.attituderoll
-            binding.valueAttitudepitch.text = sensorData.attitudepitch
-            binding.valueAttitudeazimuth.text = sensorData.attitudeazimuth
-            binding.valueGravityx.text = sensorData.gravityx
-            binding.valueGravityy.text = sensorData.gravityy
-            binding.valueGravityz.text = sensorData.gravityz
-            binding.valueRotaionratex.text = sensorData.rotationratex
-            binding.valueRotationratey.text = sensorData.rotationratey
-            binding.valueRotationratez.text = sensorData.rotationratez
-            binding.valueUseraccx.text = sensorData.useraccelerationx
-            binding.valueUseraccy.text = sensorData.useraccelarationy
-            binding.valueUseraccz.text = sensorData.useraccelerationz
+            binding.valueAttituderoll.text = sensorData.attituderoll.toString()
+            binding.valueAttitudepitch.text = sensorData.attitudepitch.toString()
+            binding.valueAttitudeazimuth.text = sensorData.attitudeazimuth.toString()
+            binding.valueGravityx.text = sensorData.gravityx.toString()
+            binding.valueGravityy.text = sensorData.gravityy.toString()
+            binding.valueGravityz.text = sensorData.gravityz.toString()
+            binding.valueRotaionratex.text = sensorData.rotationratex.toString()
+            binding.valueRotationratey.text = sensorData.rotationratey.toString()
+            binding.valueRotationratez.text = sensorData.rotationratez.toString()
+            binding.valueUseraccx.text = sensorData.useraccelerationx.toString()
+            binding.valueUseraccy.text = sensorData.useraccelarationy.toString()
+            binding.valueUseraccz.text = sensorData.useraccelerationz.toString()
         }
     }
 

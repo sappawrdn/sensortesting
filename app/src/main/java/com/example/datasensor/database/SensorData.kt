@@ -28,7 +28,7 @@ data class SensorData(
     var gravityy: String? = null,
 
     @ColumnInfo(name = "Gravity Z")
-    var gravityz: String? = null,
+    var gravityz:String? = null,
 
     @ColumnInfo(name = "Rotation Rate X")
     var rotationratex: String? = null,
@@ -42,10 +42,10 @@ data class SensorData(
     @ColumnInfo(name = "User Acceleration X")
     var useraccelerationx: String? = null,
 
-    @ColumnInfo(name = "User Acceleration Y")
-    var useraccelarationy: String? = null,
-
     @ColumnInfo(name = "User Acceleration Z")
     var useraccelerationz: String? = null,
+
+    @ColumnInfo(name = "User Acceleration Y")
+    var useraccelarationy: String? = null,
 
     )
