@@ -1,21 +1,38 @@
 package com.example.datasensor
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.Uri
+import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import com.example.datasensor.Api.CsvApiConfig
 import com.example.datasensor.database.SensorData
 import com.example.datasensor.database.SensorRoomDatabase
 import com.example.datasensor.databinding.ActivityMainBinding
+import com.example.datasensor.helper.CsvHelper
+import com.example.datasensor.helper.FileUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
+import java.io.IOException
 import java.math.BigDecimal
 import kotlin.math.abs
 
@@ -38,6 +55,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // Counter untuk jumlah data yang disimpan
     private var dataCounter = 0
 
+    private val chooseDir = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.also { uri ->
+                exportDataToCsv(uri)
+            }
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,10 +77,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         registerSensors()
         startSavingDataPeriodically()
         startCheckingData()
-        checkSensorAvailability(Sensor.TYPE_ROTATION_VECTOR)
+        checkSensorAvailability(Sensor.TYPE_GAME_ROTATION_VECTOR)
         checkSensorAvailability(Sensor.TYPE_GRAVITY)
         checkSensorAvailability(Sensor.TYPE_GYROSCOPE)
         checkSensorAvailability(Sensor.TYPE_LINEAR_ACCELERATION)
+
+        binding.exportButton.setOnClickListener {
+            chooseStorageDirectory()
+        }
     }
 
     private fun startSavingDataPeriodically() {
@@ -120,36 +149,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    fun getEulerAngles(rotationVector: FloatArray?): FloatArray? {
-        if (rotationVector == null || rotationVector.size < 4) {
-            return null // Handle invalid input
-        }
-
-        val rotationMatrix = FloatArray(9)
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector)
-
-        val w = rotationMatrix[0]
-        val x = rotationMatrix[3]
-        val y = rotationMatrix[6]
-        val z = rotationMatrix[1]
-
-        val sinB = 2.0f * (w * z + x * y)
-        val cosB = 1.0f - 2.0f * (x * x + y * y)
-
-        val pitch: Float
-        val roll: Float
-        val yaw: Float
-
-
-            // Standard calculation for most orientations
-            pitch = Math.atan2(y.toDouble(), cosB.toDouble()).toFloat()
-            roll = Math.atan2(sinB.toDouble(), x.toDouble()).toFloat()
-            yaw = Math.atan2(z.toDouble(), w.toDouble()).toFloat()
-
-        return floatArrayOf(pitch, roll, yaw)
-    }
-
-
     private fun startCheckingData() {
         val checkDataRunnable = object : Runnable {
             override fun run() {
@@ -179,22 +178,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
 
             if (event.sensor.type == Sensor.TYPE_GAME_ROTATION_VECTOR){
-                /*System.arraycopy(event.values, 0, attitudeReading, 0, attitudeReading.size)*/
-                val eulerAngles = getEulerAngles(event.values)
-                if (eulerAngles != null) {
-                    attitudeReading[0] = eulerAngles[0] // Check for null on specific index
-                    attitudeReading[1] = eulerAngles[1]
-                    attitudeReading[2] = eulerAngles[2]
-                }
-
+                System.arraycopy(event.values, 0, attitudeReading, 0, attitudeReading.size)
             }else if (event.sensor.type == Sensor.TYPE_GRAVITY){
                 System.arraycopy(event.values, 0, gravityReading, 0, gravityReading.size)
             }else if (event.sensor.type == Sensor.TYPE_GYROSCOPE){
                 System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
             }else if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION){
-                accelerometerReading[0] = event.values[0] / -9.81f
-                accelerometerReading[1] = event.values[1] / -9.81f
-                accelerometerReading[2] = event.values[2] / -9.81f
+                System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
             }
 
     }
@@ -218,5 +208,68 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         Log.d("sensor Accuracy", "Sensor Accuracy changed: $accuracy")
+    }
+
+    private fun chooseStorageDirectory() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        }
+        chooseDir.launch(intent)
+    }
+
+    private fun exportDataToCsv(uri: Uri) {
+        lifecycleScope.launch{
+            withContext(Dispatchers.IO) {
+                val sensorDataList: List<SensorData> = sensordatabase.sensorDao().getAllSensorData()
+                val csvData = CsvHelper.toCsv(sensorDataList)
+                val contentResolver = applicationContext.contentResolver
+                val documentFile = DocumentFile.fromTreeUri(applicationContext, uri)
+                val file = documentFile?.createFile("text/csv", "sensor_data.csv")
+                try {
+                    file?.let {
+                        contentResolver.openOutputStream(it.uri)?.use { outputStream ->
+                            outputStream.write(csvData.toByteArray())
+                            Log.d("FileSave", "File saved to: ${it.uri}")
+                        }
+
+                        val tempFile = File(applicationContext.cacheDir, "sensor_data.csv")
+                        tempFile.writeText(csvData)
+                        Log.d("ExportData", "Temporary file created at: ${tempFile.absolutePath}")
+                        uploadCsvToApi(tempFile)
+                    }
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    Log.d("FileSave", "Failed to save file")
+                }
+            }
+        }
+    }
+
+    private fun uploadCsvToApi(file: File) {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                try {
+                    val requestFile = file.asRequestBody("text/csv".toMediaTypeOrNull())
+                    val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+                    val response = CsvApiConfig.getApiService().uploadFile(body)
+                    Log.d("UploadCsvToApi", "Response: ${response.message}")
+                    withContext(Dispatchers.Main) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, response.message, Toast.LENGTH_LONG)
+                                .show()
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Log.d("UploadCsvToApi", "File upload failed: ${e.message}")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "File upload failed", Toast.LENGTH_LONG)
+                            .show()
+                    }
+                }
+            }
+        }
     }
 }

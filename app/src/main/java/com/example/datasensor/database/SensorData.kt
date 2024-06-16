@@ -1,10 +1,8 @@
 package com.example.datasensor.database
 
-import android.os.Parcelable
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlinx.parcelize.Parcelize
 
 
 @Entity
@@ -42,10 +40,10 @@ data class SensorData(
     @ColumnInfo(name = "User Acceleration X")
     var useraccelerationx: String? = null,
 
-    @ColumnInfo(name = "User Acceleration Z")
-    var useraccelerationz: String? = null,
-
     @ColumnInfo(name = "User Acceleration Y")
     var useraccelarationy: String? = null,
+
+    @ColumnInfo(name = "User Acceleration Z")
+    var useraccelerationz: String? = null,
 
     )
