@@ -55,13 +55,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // Counter untuk jumlah data yang disimpan
     private var dataCounter = 0
 
-    private val chooseDir = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.also { uri ->
-                exportDataToCsv(uri)
-            }
-        }
-    }
+//    private val chooseDir = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//        if (result.resultCode == Activity.RESULT_OK) {
+//            result.data?.data?.also { uri ->
+//                exportDataToCsv(uri)
+//            }
+//        }
+//    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,9 +82,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         checkSensorAvailability(Sensor.TYPE_GYROSCOPE)
         checkSensorAvailability(Sensor.TYPE_LINEAR_ACCELERATION)
 
-        binding.exportButton.setOnClickListener {
-            chooseStorageDirectory()
-        }
+//        binding.exportButton.setOnClickListener {
+//            chooseStorageDirectory()
+//        }
     }
 
     private fun startSavingDataPeriodically() {
@@ -210,66 +210,66 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         Log.d("sensor Accuracy", "Sensor Accuracy changed: $accuracy")
     }
 
-    private fun chooseStorageDirectory() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-            flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-        }
-        chooseDir.launch(intent)
-    }
+//    private fun chooseStorageDirectory() {
+//        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+//            flags = Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+//                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+//                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+//        }
+//        chooseDir.launch(intent)
+//    }
 
-    private fun exportDataToCsv(uri: Uri) {
-        lifecycleScope.launch{
-            withContext(Dispatchers.IO) {
-                val sensorDataList: List<SensorData> = sensordatabase.sensorDao().getAllSensorData()
-                val csvData = CsvHelper.toCsv(sensorDataList)
-                val contentResolver = applicationContext.contentResolver
-                val documentFile = DocumentFile.fromTreeUri(applicationContext, uri)
-                val file = documentFile?.createFile("text/csv", "sensor_data.csv")
-                try {
-                    file?.let {
-                        contentResolver.openOutputStream(it.uri)?.use { outputStream ->
-                            outputStream.write(csvData.toByteArray())
-                            Log.d("FileSave", "File saved to: ${it.uri}")
-                        }
-
-                        val tempFile = File(applicationContext.cacheDir, "sensor_data.csv")
-                        tempFile.writeText(csvData)
-                        Log.d("ExportData", "Temporary file created at: ${tempFile.absolutePath}")
-                        uploadCsvToApi(tempFile)
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                    Log.d("FileSave", "Failed to save file")
-                }
-            }
-        }
-    }
-
-    private fun uploadCsvToApi(file: File) {
-        lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                try {
-                    val requestFile = file.asRequestBody("text/csv".toMediaTypeOrNull())
-                    val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-                    val response = CsvApiConfig.getApiService().uploadFile(body)
-                    Log.d("UploadCsvToApi", "Response: ${response.message}")
-                    withContext(Dispatchers.Main) {
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@MainActivity, response.message, Toast.LENGTH_LONG)
-                                .show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Log.d("UploadCsvToApi", "File upload failed: ${e.message}")
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(this@MainActivity, "File upload failed", Toast.LENGTH_LONG)
-                            .show()
-                    }
-                }
-            }
-        }
-    }
+//    private fun exportDataToCsv(uri: Uri) {
+//        lifecycleScope.launch{
+//            withContext(Dispatchers.IO) {
+//                val sensorDataList: List<SensorData> = sensordatabase.sensorDao().getAllSensorData()
+//                val csvData = CsvHelper.toCsv(sensorDataList)
+//                val contentResolver = applicationContext.contentResolver
+//                val documentFile = DocumentFile.fromTreeUri(applicationContext, uri)
+//                val file = documentFile?.createFile("text/csv", "sensor_data.csv")
+//                try {
+//                    file?.let {
+//                        contentResolver.openOutputStream(it.uri)?.use { outputStream ->
+//                            outputStream.write(csvData.toByteArray())
+//                            Log.d("FileSave", "File saved to: ${it.uri}")
+//                        }
+//
+//                        val tempFile = File(applicationContext.cacheDir, "sensor_data.csv")
+//                        tempFile.writeText(csvData)
+//                        Log.d("ExportData", "Temporary file created at: ${tempFile.absolutePath}")
+//                        uploadCsvToApi(tempFile)
+//                    }
+//                } catch (e: IOException) {
+//                    e.printStackTrace()
+//                    Log.d("FileSave", "Failed to save file")
+//                }
+//            }
+//        }
+//    }
+//
+//    private fun uploadCsvToApi(file: File) {
+//        lifecycleScope.launch {
+//            withContext(Dispatchers.IO) {
+//                try {
+//                    val requestFile = file.asRequestBody("text/csv".toMediaTypeOrNull())
+//                    val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+//                    val response = CsvApiConfig.getApiService().uploadFile(body)
+//                    Log.d("UploadCsvToApi", "Response: ${response.message}")
+//                    withContext(Dispatchers.Main) {
+//                        withContext(Dispatchers.Main) {
+//                            Toast.makeText(this@MainActivity, response.message, Toast.LENGTH_LONG)
+//                                .show()
+//                        }
+//                    }
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                    Log.d("UploadCsvToApi", "File upload failed: ${e.message}")
+//                    withContext(Dispatchers.Main) {
+//                        Toast.makeText(this@MainActivity, "File upload failed", Toast.LENGTH_LONG)
+//                            .show()
+//                    }
+//                }
+//            }
+//        }
+//    }
 }

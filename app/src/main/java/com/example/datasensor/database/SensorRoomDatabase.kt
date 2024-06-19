@@ -20,7 +20,7 @@ abstract class SensorRoomDatabase: RoomDatabase() {
                 synchronized(SensorRoomDatabase::class.java) {
                     INSTANCE = Room.databaseBuilder(
                         context.applicationContext,
-                        SensorRoomDatabase::class.java, "tes5"
+                        SensorRoomDatabase::class.java, "jalan2"
                     )
                         .build()
                 }

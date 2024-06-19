@@ -7,6 +7,6 @@ import retrofit2.http.Part
 
 interface CsvApiService {
     @Multipart
-    @POST("api/v1/storage/upload-csv")
+    @POST("api/v1/storage/upload-csv/")
     suspend fun uploadFile(@Part file: MultipartBody.Part): CsvResponse
 }
